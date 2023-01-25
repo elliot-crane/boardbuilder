@@ -12,6 +12,8 @@ pub enum AppError {
 fn main() -> Result<()> {
     let bytes_serp = include_bytes!("../.cache/Serpentine_helm_detail.png");
     let image_serp = image::load_from_memory(bytes_serp)?.to_rgba8();
+    // this is messy, but unfortunately RIL seems to have some issue with decoding palette-indexed transparent PNGs
+    // I still wanted to use RIL's compositing and editing API, so I made this hack loading through the image crate
     let mut ril_serp = Image::from_fn(image_serp.width(), image_serp.height(), |x, y| {
         let p = image_serp.get_pixel(x, y);
         Rgba {
@@ -21,7 +23,7 @@ fn main() -> Result<()> {
             a: p[3],
         }
     });
-    let target_square = 256u32;
+    let target_square = 150u32;
     let new_width;
     let new_height;
     if ril_serp.width() > ril_serp.height() {
@@ -35,8 +37,57 @@ fn main() -> Result<()> {
     }
     ril_serp.resize(new_width, new_height, ResizeAlgorithm::Bicubic);
 
-    ril_serp
-        .save(ImageFormat::Png, ".cache/Serpentine_helm_resized.png")
+    // compositing over a background image
+    let border_color = Rgba {
+        r: 47,
+        g: 43,
+        b: 34,
+        a: 255,
+    };
+    let inset_color_locked = Rgba {
+        r: 117,
+        g: 99,
+        b: 78,
+        a: 255,
+    };
+    let background_color_locked = Rgba {
+        r: 74,
+        g: 62,
+        b: 50,
+        a: 255,
+    };
+    let mut composited_image = Image::new(256, 256, background_color_locked);
+
+    let border = Rectangle::<Rgba>::from_bounding_box(0, 0, 256, 256)
+        .with_border(Border::new(border_color, 4).with_position(BorderPosition::Inset));
+    composited_image.draw(&border);
+
+    let inset = Rectangle::<Rgba>::from_bounding_box(4, 4, 252, 252)
+        .with_border(Border::new(inset_color_locked, 4).with_position(BorderPosition::Inset));
+    composited_image.draw(&inset);
+
+    // composite the item image
+    let delta_x = composited_image.width() - ril_serp.width();
+    let delta_y = composited_image.height() - ril_serp.height();
+    let px = if delta_x % 2 == 0 {
+        delta_x / 2
+    } else {
+        1 + delta_x / 2
+    };
+    let py = if delta_y % 2 == 0 {
+        delta_y / 2
+    } else {
+        1 + delta_y / 2
+    };
+    composited_image.draw(&Paste {
+        position: (px, py),
+        image: &ril_serp,
+        mask: None,
+        overlay: Some(OverlayMode::Merge),
+    });
+
+    composited_image
+        .save(ImageFormat::Png, ".cache/Serpentine_helm_composited.png")
         .map_err(AppError::RILError)?;
     Ok(())
 }
