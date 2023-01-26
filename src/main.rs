@@ -87,8 +87,9 @@ fn main() -> Result<()> {
     });
 
     // text compositing - this is SUPER janky at the moment but it's a first-pass
-    let font_bytes = include_bytes!("../.cache/RuneScape-Bold-12.otf");
-    let font = Font::from_bytes(font_bytes, 16.0).map_err(AppError::RILError)?;
+    let font_bytes =
+        include_bytes!("../assets/fonts/runescape-chat-bold-2/runescape-chat-bold-2.otf");
+    let font = Font::from_bytes(font_bytes, 12.0).map_err(AppError::RILError)?;
     let text = "Serpentine helm";
     let layout = TextLayout::new()
         .with_position(0, 0)
@@ -141,9 +142,9 @@ fn main() -> Result<()> {
     });
     text_image.draw(&layout);
 
-    // text_image
-    //     .save(ImageFormat::Png, ".cache/Serpentine_helm_text.png")
-    //     .map_err(AppError::RILError)?;
+    text_image
+        .save(ImageFormat::Png, ".cache/Serpentine_helm_text.png")
+        .map_err(AppError::RILError)?;
 
     // now to add the text to the composited image
     let delta_x = composited_image.width() - text_image.width();
