@@ -1,13 +1,9 @@
 use anyhow::Result;
+use error::AppError;
 use image;
 use ril::prelude::*;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum AppError {
-    #[error("RIL error: {0}")]
-    RILError(ril::Error),
-}
+mod error;
 
 fn main() -> Result<()> {
     let bytes_serp = include_bytes!("../.cache/Serpentine_helm_detail.png");
