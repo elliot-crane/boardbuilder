@@ -86,6 +86,82 @@ fn main() -> Result<()> {
         overlay: Some(OverlayMode::Merge),
     });
 
+    // text compositing - this is SUPER janky at the moment but it's a first-pass
+    let font_bytes = include_bytes!("../.cache/RuneScape-Bold-12.otf");
+    let font = Font::from_bytes(font_bytes, 16.0).map_err(AppError::RILError)?;
+    let text = "Serpentine helm";
+    let layout = TextLayout::new()
+        .with_position(0, 0)
+        .with_wrap(WrapStyle::None)
+        .with_segment(
+            &TextSegment::new(
+                &font,
+                text,
+                Rgba {
+                    r: 255,
+                    g: 144,
+                    b: 0,
+                    a: 255,
+                },
+            )
+            .with_size(20.0),
+        );
+    // add 1 here because of the shadow
+    let (mut text_width, mut text_height) = layout.dimensions();
+    text_width += 1;
+    text_height += 1;
+    let mut shadow_image = Image::new(
+        text_width,
+        text_height,
+        Rgba {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 0,
+        },
+    );
+    // draw the text then saturate it to pure black
+    shadow_image.draw(&layout);
+    shadow_image.darken(255);
+    let mut text_image = Image::new(
+        text_width,
+        text_height,
+        Rgba {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 0,
+        },
+    );
+    text_image.draw(&Paste {
+        position: (1, 1),
+        image: &shadow_image,
+        mask: None,
+        overlay: Some(OverlayMode::Merge),
+    });
+    text_image.draw(&layout);
+
+    // text_image
+    //     .save(ImageFormat::Png, ".cache/Serpentine_helm_text.png")
+    //     .map_err(AppError::RILError)?;
+
+    // now to add the text to the composited image
+    let delta_x = composited_image.width() - text_image.width();
+    let px = if delta_x % 2 == 0 {
+        delta_x / 2
+    } else {
+        1 + delta_x / 2
+    };
+    // border is 8px, so move up an additional 4 for a tiny bit of breathing room
+    let py = composited_image.height() - 12 - text_image.height();
+
+    composited_image.draw(&Paste {
+        position: (px, py),
+        image: &text_image,
+        mask: None,
+        overlay: Some(OverlayMode::Merge),
+    });
+
     composited_image
         .save(ImageFormat::Png, ".cache/Serpentine_helm_composited.png")
         .map_err(AppError::RILError)?;
