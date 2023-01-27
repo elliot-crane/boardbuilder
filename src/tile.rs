@@ -167,6 +167,7 @@ impl<'a> TileRenderer<'a> {
         if !tile.unlocked {
             desaturate(&mut item_image, 0.9);
         }
+        // TODO: need to adjust the resizing code because this panics
         let x_pad = (content_width - item_image.width()) / 2;
         let y_pad = (content_height - item_image.height()) / 2;
         image.draw(&Paste {
