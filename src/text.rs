@@ -16,9 +16,42 @@ const TRANSPARENT: Rgba = Rgba {
     b: 0,
     a: 0,
 };
+const YELLOW: Rgba = Rgba {
+    r: 255,
+    g: 255,
+    b: 0,
+    a: 255,
+};
 
 pub struct TextRenderer {
     font: Font,
+}
+
+/// Configures the text renderer
+pub struct TextRenderOptions {
+    /// The font size
+    pub size: f32,
+    /// Color to render with
+    pub color: Rgba,
+    /// Options for pixelating to undo built-in antialiasing
+    pub pixelation: Option<TextPixelationOptions>,
+}
+
+impl Default for TextRenderOptions {
+    fn default() -> Self {
+        Self {
+            size: 16.0,
+            color: YELLOW,
+            pixelation: None,
+        }
+    }
+}
+
+/// Options for pixelating text
+pub struct TextPixelationOptions {
+    /// Antialiased pixels less-than or equal-to this alpha value will become
+    /// completely transparent; any other pixels will become completely opaque
+    pub alpha_threshold: u8,
 }
 
 impl Default for TextRenderer {
@@ -39,7 +72,7 @@ impl TextRenderer {
         Ok(Self::from_font(font))
     }
 
-    pub fn render(&self, text: impl AsRef<str>, color: Rgba) -> Image<Rgba> {
+    pub fn render(&self, text: impl AsRef<str>, options: &TextRenderOptions) -> Image<Rgba> {
         // render text as pure black first
         let layout = TextLayout::new()
             .with_position(0, 0)
@@ -57,9 +90,9 @@ impl TextRenderer {
 
         // draw the shadow
         template_image.draw(&layout);
-        // TODO: a lot of trial and error was involved in choosing this value for the default text;
-        // this value and whether or not to pixelate the text should be configurable
-        alpha_threshold(&mut template_image, 140);
+        if let Some(pixelation) = &options.pixelation {
+            alpha_threshold(&mut template_image, pixelation.alpha_threshold);
+        }
         text_image.draw(&Paste {
             position: (1, 1),
             image: &template_image,
@@ -71,9 +104,9 @@ impl TextRenderer {
         template_image.map_in_place(|_, _, p| {
             if *p != TRANSPARENT {
                 // copy the RGB but leave the alpha matching the image above
-                p.r = color.r;
-                p.g = color.g;
-                p.b = color.b;
+                p.r = options.color.r;
+                p.g = options.color.g;
+                p.b = options.color.b;
             }
         });
         text_image.draw(&Paste {
