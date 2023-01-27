@@ -1,2 +1,8 @@
+# cargo/rust compilation artifacts
 /target
+
+# the cache this application creates
 .cache/
+
+# random system files
+.DS_Store
