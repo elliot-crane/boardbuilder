@@ -1,4 +1,4 @@
-use ril::{Border, BorderPosition, Image, OverlayMode, Paste, Rectangle, Rgba};
+use ril::{Border, BorderPosition, Image, OverlayMode, Paste, Rectangle, ResizeAlgorithm, Rgba};
 
 use crate::{
     palette::{
@@ -28,7 +28,7 @@ pub struct TileRenderOptions {
 impl Default for TileRenderOptions {
     fn default() -> Self {
         Self {
-            size: 240,
+            size: 216,
             padding: 6,
             border_size: 4,
             inset_size: 4,
@@ -145,6 +145,36 @@ impl<'a> TileRenderer<'a> {
         // now shift y1 and y2 so that the tile's image does not overlap the text
         y1 += number_text.height() + self.options.padding;
         y2 -= name_text.height() + self.options.padding;
+        let content_width = x2 - x1;
+        let content_height = y2 - y1;
+        let mut item_image = tile.image.clone();
+        // resize image if necessary
+        if item_image.width() > content_width || item_image.height() > content_height {
+            let new_width;
+            let new_height;
+            if item_image.width() > item_image.height() {
+                let scale_factor = item_image.width() as f32 / content_width as f32;
+                new_width = content_width;
+                new_height = (item_image.height() as f32 / scale_factor).floor() as u32;
+            } else {
+                let scale_factor = item_image.height() as f32 / content_height as f32;
+                new_width = (item_image.width() as f32 / scale_factor).floor() as u32;
+                new_height = content_height;
+            }
+            item_image.resize(new_width, new_height, ResizeAlgorithm::Bicubic);
+        }
+        // locked tiles are grayed out
+        if !tile.unlocked {
+            desaturate(&mut item_image, 0.9);
+        }
+        let x_pad = (content_width - item_image.width()) / 2;
+        let y_pad = (content_height - item_image.height()) / 2;
+        image.draw(&Paste {
+            position: (x1 + x_pad, y1 + y_pad),
+            image: &item_image,
+            mask: None,
+            overlay: Some(OverlayMode::Merge),
+        });
         image
     }
 }
@@ -177,4 +207,17 @@ fn render_tile_template(
     image.draw(&border);
     image.draw(&inset);
     image
+}
+
+fn desaturate(image: &mut Image<Rgba>, factor: f32) {
+    // borrowed this approximation from SO: https://stackoverflow.com/a/20820649
+    image.map_in_place(|_, _, p| {
+        let r = p.r as f32;
+        let g = p.g as f32;
+        let b = p.b as f32;
+        let luma = 0.3 * r + 0.6 * g + 0.1 * b;
+        p.r = (r + factor * (luma - r)).floor().clamp(0.0, 255.0) as u8;
+        p.g = (g + factor * (luma - g)).floor().clamp(0.0, 255.0) as u8;
+        p.b = (b + factor * (luma - b)).floor().clamp(0.0, 255.0) as u8;
+    });
 }
