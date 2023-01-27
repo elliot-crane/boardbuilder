@@ -1,7 +1,7 @@
 use anyhow::Result;
 use error::AppError;
 use image;
-use palette::ORANGE;
+use palette::{DEFAULT_BACKGROUND_LOCKED_COLOR, DEFAULT_BORDER_COLOR, DEFAULT_INSET_COLOR, ORANGE};
 use ril::prelude::*;
 use text::{TextRenderOptions, TextRenderer};
 
@@ -38,32 +38,14 @@ fn main() -> Result<()> {
     ril_serp.resize(new_width, new_height, ResizeAlgorithm::Bicubic);
 
     // compositing over a background image
-    let border_color = Rgba {
-        r: 47,
-        g: 43,
-        b: 34,
-        a: 255,
-    };
-    let inset_color_locked = Rgba {
-        r: 117,
-        g: 99,
-        b: 78,
-        a: 255,
-    };
-    let background_color_locked = Rgba {
-        r: 74,
-        g: 62,
-        b: 50,
-        a: 255,
-    };
-    let mut composited_image = Image::new(256, 256, background_color_locked);
+    let mut composited_image = Image::new(256, 256, DEFAULT_BACKGROUND_LOCKED_COLOR);
 
     let border = Rectangle::<Rgba>::from_bounding_box(0, 0, 256, 256)
-        .with_border(Border::new(border_color, 4).with_position(BorderPosition::Inset));
+        .with_border(Border::new(DEFAULT_BORDER_COLOR, 4).with_position(BorderPosition::Inset));
     composited_image.draw(&border);
 
     let inset = Rectangle::<Rgba>::from_bounding_box(4, 4, 252, 252)
-        .with_border(Border::new(inset_color_locked, 4).with_position(BorderPosition::Inset));
+        .with_border(Border::new(DEFAULT_INSET_COLOR, 4).with_position(BorderPosition::Inset));
     composited_image.draw(&inset);
 
     // composite the item image
