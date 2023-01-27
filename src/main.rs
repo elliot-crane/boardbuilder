@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     let tile_renderer = TileRenderer::new(Default::default(), &text_renderer);
 
     let serp_helm = image_loader
-        .load_from_url("https://oldschool.runescape.wiki/images/Serpentine_helm_detail.png")?;
+        .load_from_url("https://oldschool.runescape.wiki/images/thumb/Serpentine_helm_detail.png/425px-Serpentine_helm_detail.png")?;
     let test_tile = Tile {
         number: 14,
         name: "Serpentine helm".to_string(),
