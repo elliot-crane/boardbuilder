@@ -1,27 +1,12 @@
 use ril::{Font, Image, OverlayMode, Paste, Rgba, TextLayout, TextSegment, WrapStyle};
 
-use crate::error::AppError;
+use crate::{
+    error::AppError,
+    palette::{BLACK, TRANSPARENT, YELLOW},
+};
 
 const DEFAULT_FONT_BYTES: &[u8] =
     include_bytes!("../assets/fonts/runescape-chat-bold-2/runescape-chat-bold-2.otf");
-const BLACK: Rgba = Rgba {
-    r: 0,
-    g: 0,
-    b: 0,
-    a: 255,
-};
-const TRANSPARENT: Rgba = Rgba {
-    r: 0,
-    g: 0,
-    b: 0,
-    a: 0,
-};
-const YELLOW: Rgba = Rgba {
-    r: 255,
-    g: 255,
-    b: 0,
-    a: 255,
-};
 
 pub struct TextRenderer {
     font: Font,

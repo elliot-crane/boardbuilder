@@ -1,10 +1,12 @@
 use anyhow::Result;
 use error::AppError;
 use image;
+use palette::ORANGE;
 use ril::prelude::*;
 use text::{TextRenderOptions, TextRenderer};
 
 mod error;
+mod palette;
 mod text;
 
 fn main() -> Result<()> {
@@ -88,12 +90,7 @@ fn main() -> Result<()> {
     let text_image = text_renderer.render(
         "Serpentine helm",
         &TextRenderOptions {
-            color: Rgba {
-                r: 255,
-                g: 144,
-                b: 0,
-                a: 255,
-            },
+            color: ORANGE,
             ..Default::default()
         },
     );
