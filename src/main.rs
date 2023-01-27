@@ -4,10 +4,12 @@ use image;
 use palette::{DEFAULT_BACKGROUND_LOCKED_COLOR, DEFAULT_BORDER_COLOR, DEFAULT_INSET_COLOR, ORANGE};
 use ril::prelude::*;
 use text::{TextRenderOptions, TextRenderer};
+use tile::{Tile, TileRenderer};
 
 mod error;
 mod palette;
 mod text;
+mod tile;
 
 fn main() -> Result<()> {
     let bytes_serp = include_bytes!("../.cache/Serpentine_helm_detail.png");
@@ -69,36 +71,21 @@ fn main() -> Result<()> {
     });
 
     let text_renderer = TextRenderer::default();
-    let text_image = text_renderer.render(
-        "Serpentine helm",
-        &TextRenderOptions {
-            color: ORANGE,
-            ..Default::default()
-        },
-    );
-    text_image
-        .save(ImageFormat::Png, ".cache/Serpentine_helm_text.png")
-        .map_err(AppError::RILError)?;
-
-    // now to add the text to the composited image
-    let delta_x = composited_image.width() - text_image.width();
-    let px = if delta_x % 2 == 0 {
-        delta_x / 2
-    } else {
-        1 + delta_x / 2
+    let tile_renderer = TileRenderer::new(Default::default(), &text_renderer);
+    let test_tile = Tile {
+        number: 14,
+        name: "Serpentine helm".to_string(),
+        image: ril_serp.clone(),
+        unlocked: false,
     };
-    // border is 8px, so move up an additional 4 for a tiny bit of breathing room
-    let py = composited_image.height() - 12 - text_image.height();
 
-    composited_image.draw(&Paste {
-        position: (px, py),
-        image: &text_image,
-        mask: None,
-        overlay: Some(OverlayMode::Merge),
-    });
-
-    composited_image
-        .save(ImageFormat::Png, ".cache/Serpentine_helm_composited.png")
+    let tile_image = tile_renderer.render(&test_tile);
+    tile_image
+        .save(ImageFormat::Png, ".cache/Serpentine_helm_tile.png")
         .map_err(AppError::RILError)?;
+
+    // composited_image
+    //     .save(ImageFormat::Png, ".cache/Serpentine_helm_composited.png")
+    //     .map_err(AppError::RILError)?;
     Ok(())
 }
