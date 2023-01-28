@@ -1,10 +1,12 @@
 use anyhow::Result;
+use board::{Board, BoardRenderer};
 use error::AppError;
 use images::ImageLoader;
 use ril::prelude::*;
 use text::TextRenderer;
 use tile::{Tile, TileRenderer};
 
+mod board;
 mod error;
 mod images;
 mod palette;
@@ -16,6 +18,7 @@ fn main() -> Result<()> {
     let image_loader = ImageLoader::new(Default::default())?;
     let text_renderer = TextRenderer::default();
     let tile_renderer = TileRenderer::new(Default::default(), &text_renderer);
+    let board_renderer = BoardRenderer::new(&tile_renderer);
 
     let serp_helm = image_loader
         .load_from_url("https://oldschool.runescape.wiki/images/thumb/Serpentine_helm_detail.png/425px-Serpentine_helm_detail.png")?;
@@ -26,11 +29,6 @@ fn main() -> Result<()> {
         unlocked: false,
     };
 
-    tile_renderer
-        .render(&serp_tile)
-        .save(ImageFormat::Png, "target/Serpentine_helm_tile.png")
-        .map_err(AppError::RILError)?;
-
     let mark_of_grace = image_loader
         .load_from_url("https://oldschool.runescape.wiki/images/thumb/Mark_of_grace_detail.png/487px-Mark_of_grace_detail.png")?;
     let agility_tile = Tile {
@@ -40,9 +38,26 @@ fn main() -> Result<()> {
         unlocked: false,
     };
 
-    tile_renderer
-        .render(&agility_tile)
-        .save(ImageFormat::Png, "target/Agility_xp_tile.png")
+    let board = Board {
+        rows: 5,
+        cols: 5,
+        content_rect: (20, 20, 120 + 216 * 5, 120 + 216 * 5),
+        tile_size: 216,
+        image: Image::new(
+            140 + 216 * 5,
+            140 + 216 * 5,
+            Rgba {
+                r: 240,
+                g: 20,
+                b: 200,
+                a: 255,
+            },
+        ),
+        tiles: vec![serp_tile, agility_tile],
+    };
+    let board_image = board_renderer.render(&board);
+    board_image
+        .save(ImageFormat::Png, "target/board_sample.png")
         .map_err(AppError::RILError)?;
 
     Ok(())
