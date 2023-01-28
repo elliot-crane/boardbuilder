@@ -150,24 +150,33 @@ impl<'a> TileRenderer<'a> {
         let mut item_image = tile.image.clone();
         // resize image if necessary
         if item_image.width() > content_width || item_image.height() > content_height {
-            let new_width;
-            let new_height;
-            if item_image.width() > item_image.height() {
-                let scale_factor = item_image.width() as f32 / content_width as f32;
-                new_width = content_width;
-                new_height = (item_image.height() as f32 / scale_factor).floor() as u32;
+            let content_aspect_ratio = content_width as f32 / content_height as f32;
+            let image_aspect_ratio = item_image.width() as f32 / item_image.height() as f32;
+            let scale_factor = if image_aspect_ratio > content_aspect_ratio {
+                // the image is wider relative to its height than the content box is to its height
+                // so the width is the limiting factor
+                content_width as f32 / item_image.width() as f32
             } else {
-                let scale_factor = item_image.height() as f32 / content_height as f32;
-                new_width = (item_image.width() as f32 / scale_factor).floor() as u32;
-                new_height = content_height;
-            }
+                // otherwise the image is taller relative to its width than the content box is to its width
+                // so the height is the limiting factor
+                content_height as f32 / item_image.height() as f32
+            };
+            let new_width = (scale_factor * item_image.width() as f32) as u32;
+            let new_height = (scale_factor * item_image.height() as f32) as u32;
             item_image.resize(new_width, new_height, ResizeAlgorithm::Bicubic);
+            debug_assert!(
+                item_image.width() <= content_width,
+                "item image too wide after resize"
+            );
+            debug_assert!(
+                item_image.height() <= content_height,
+                "item image too tall after resize"
+            );
         }
         // locked tiles are grayed out
         if !tile.unlocked {
             desaturate(&mut item_image, 0.9);
         }
-        // TODO: need to adjust the resizing code because this panics
         let x_pad = (content_width - item_image.width()) / 2;
         let y_pad = (content_height - item_image.height()) / 2;
         image.draw(&Paste {
