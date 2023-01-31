@@ -16,7 +16,6 @@ pub struct Tile {
 }
 
 pub struct TileRenderOptions {
-    pub size: u32,
     pub padding: u32,
     pub border_size: u32,
     pub inset_size: u32,
@@ -28,7 +27,6 @@ pub struct TileRenderOptions {
 impl Default for TileRenderOptions {
     fn default() -> Self {
         Self {
-            size: 216,
             padding: 6,
             border_size: 4,
             inset_size: 4,
@@ -66,13 +64,13 @@ impl<'a> TileRenderer<'a> {
     }
 
     // TODO: function is chonky, clean it up a bit - does passing options here even make sense?
-    pub fn render(&self, tile: &Tile, options: &TileRenderOptions) -> Image<Rgba> {
+    pub fn render(&self, tile: &Tile, tile_size: u32, options: &TileRenderOptions) -> Image<Rgba> {
         let text_color;
         let mut image;
         if tile.unlocked {
             text_color = options.unlocked_theme.text_color;
             image = render_tile_template(
-                options.size,
+                tile_size,
                 options.border_size,
                 options.inset_size,
                 options.unlocked_theme.background_color,
@@ -82,7 +80,7 @@ impl<'a> TileRenderer<'a> {
         } else {
             text_color = options.locked_theme.text_color;
             image = render_tile_template(
-                options.size,
+                tile_size,
                 options.border_size,
                 options.inset_size,
                 options.locked_theme.background_color,
@@ -90,7 +88,7 @@ impl<'a> TileRenderer<'a> {
                 options.locked_theme.inset_color,
             );
         }
-        let (x1, mut y1, x2, mut y2) = compute_content_bounds(options);
+        let (x1, mut y1, x2, mut y2) = compute_content_bounds(tile_size, options);
         let text_size = options.text_size as f32;
         // composite in text
         let number_text = self.text_renderer.render(
@@ -175,10 +173,10 @@ impl<'a> TileRenderer<'a> {
     }
 }
 
-fn compute_content_bounds(options: &TileRenderOptions) -> (u32, u32, u32, u32) {
+fn compute_content_bounds(tile_size: u32, options: &TileRenderOptions) -> (u32, u32, u32, u32) {
     let offset = options.border_size + options.inset_size + options.padding;
-    let x2 = options.size - offset;
-    let y2 = options.size - offset;
+    let x2 = tile_size - offset;
+    let y2 = tile_size - offset;
     (offset, offset, x2, y2)
 }
 

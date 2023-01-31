@@ -4,9 +4,10 @@ use error::AppError;
 use images::ImageLoader;
 use ril::prelude::*;
 use text::TextRenderer;
-use tile::{Tile, TileRenderer};
+use tile::{Tile, TileRenderOptions, TileRenderer};
 
 mod board;
+mod builder;
 mod error;
 mod images;
 mod palette;
@@ -43,6 +44,8 @@ fn main() -> Result<()> {
         cols: 5,
         content_rect: (20, 20, 120 + 216 * 5, 120 + 216 * 5),
         tile_size: 216,
+        tiles: vec![serp_tile, agility_tile],
+        tile_render_options: TileRenderOptions::default(),
         image: Image::new(
             140 + 216 * 5,
             140 + 216 * 5,
@@ -53,7 +56,6 @@ fn main() -> Result<()> {
                 a: 255,
             },
         ),
-        tiles: vec![serp_tile, agility_tile],
     };
     let board_image = board_renderer.render(&board);
     board_image

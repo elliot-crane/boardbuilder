@@ -12,8 +12,9 @@ pub struct Board {
     pub content_rect: (u32, u32, u32, u32),
     /// how long or wide a tile is
     pub tile_size: u32,
-    pub image: Image<Rgba>,
+    pub tile_render_options: TileRenderOptions,
     pub tiles: Vec<Tile>,
+    pub image: Image<Rgba>,
 }
 
 pub struct BoardRenderer<'a> {
@@ -51,9 +52,9 @@ impl<'a> BoardRenderer<'a> {
         for row in board.tiles.chunks(board.cols) {
             for tile in row {
                 // TODO: customizable theme
-                let tile_image = self
-                    .tile_renderer
-                    .render(tile, &TileRenderOptions::default());
+                let tile_image =
+                    self.tile_renderer
+                        .render(tile, board.tile_size, &board.tile_render_options);
                 image.draw(&Paste {
                     position: (x, y),
                     image: &tile_image,
