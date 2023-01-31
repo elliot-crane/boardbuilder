@@ -2,6 +2,7 @@ use reqwest::blocking::{Client, ClientBuilder};
 use ril::{Image, ImageFormat, Rgba};
 use std::{
     env,
+    ffi::OsString,
     fs::DirBuilder,
     path::{Path, PathBuf},
 };
@@ -62,6 +63,7 @@ impl ImageLoader {
         let mut cache_path = self.options.cache_dir.clone();
         cache_path.push(partial_cache_path);
         let cache_path = cache_path.as_path();
+        let encoding = get_encoding_from_extension(cache_path);
         // the easy path - file exists on disk, just return it
         if cache_path.is_file() {
             println!("returning image from filesystem cache");
@@ -81,16 +83,6 @@ impl ImageLoader {
             .map_err(AppError::HttpError)?;
         let ril_image = ril_image_from_bytes(&bytes)?;
         // cache it for next time
-        // TODO: move this check way way way higher up
-        let extension = cache_path
-            .extension()
-            .map(|s| s.to_ascii_lowercase())
-            .expect("expected a file extension");
-        let encoding = match extension.to_str() {
-            Some("jpg") | Some("jpeg") => ImageFormat::Jpeg,
-            Some("png") => ImageFormat::Png,
-            _ => ImageFormat::Unknown,
-        };
         ril_image
             .save(encoding, cache_path)
             .map_err(AppError::RILError)?;
@@ -153,6 +145,19 @@ fn ril_image_from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<Image<Rgba>, AppErro
             a: p[3],
         }
     }))
+}
+
+fn get_encoding_from_extension<P: AsRef<Path>>(path: P) -> ImageFormat {
+    let extension = path
+        .as_ref()
+        .extension()
+        .map(|e| e.to_owned().to_ascii_lowercase())
+        .unwrap_or(OsString::new());
+    match extension.to_str() {
+        Some("jpg") | Some("jpeg") => ImageFormat::Jpeg,
+        Some("png") => ImageFormat::Png,
+        _ => ImageFormat::Unknown,
+    }
 }
 
 #[cfg(test)]
