@@ -2,7 +2,7 @@ use ril::{Image, OverlayMode, Paste, Rgba};
 
 use crate::{
     palette::TRANSPARENT,
-    tile::{Tile, TileRenderer},
+    tile::{Tile, TileRenderOptions, TileRenderer},
 };
 
 pub struct Board {
@@ -50,7 +50,10 @@ impl<'a> BoardRenderer<'a> {
         let mut y = y1;
         for row in board.tiles.chunks(board.cols) {
             for tile in row {
-                let tile_image = self.tile_renderer.render(tile);
+                // TODO: customizable theme
+                let tile_image = self
+                    .tile_renderer
+                    .render(tile, &TileRenderOptions::default());
                 image.draw(&Paste {
                     position: (x, y),
                     image: &tile_image,

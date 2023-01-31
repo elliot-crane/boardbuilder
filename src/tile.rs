@@ -57,61 +57,47 @@ pub struct TileTheme {
 }
 
 pub struct TileRenderer<'a> {
-    options: TileRenderOptions,
-    /// x1, y1, x2, y2 rectangle that accounts for border, inset, and padding
-    content_bounds: (u32, u32, u32, u32),
-    locked_template: Image<Rgba>,
-    unlocked_template: Image<Rgba>,
     text_renderer: &'a TextRenderer,
 }
 
 impl<'a> TileRenderer<'a> {
-    pub fn new(options: TileRenderOptions, text_renderer: &'a TextRenderer) -> Self {
-        let content_bounds = compute_content_bounds(&options);
-        let locked_template = render_tile_template(
-            options.size,
-            options.border_size,
-            options.inset_size,
-            options.locked_theme.background_color,
-            options.locked_theme.border_color,
-            options.locked_theme.inset_color,
-        );
-        let unlocked_template = render_tile_template(
-            options.size,
-            options.border_size,
-            options.inset_size,
-            options.unlocked_theme.background_color,
-            options.unlocked_theme.border_color,
-            options.unlocked_theme.inset_color,
-        );
-        Self {
-            options,
-            content_bounds,
-            locked_template,
-            unlocked_template,
-            text_renderer,
-        }
+    pub fn new(text_renderer: &'a TextRenderer) -> Self {
+        Self { text_renderer }
     }
 
-    pub fn render(&self, tile: &Tile) -> Image<Rgba> {
-        let mut image = if tile.unlocked {
-            self.unlocked_template.clone()
+    // TODO: function is chonky, clean it up a bit - does passing options here even make sense?
+    pub fn render(&self, tile: &Tile, options: &TileRenderOptions) -> Image<Rgba> {
+        let text_color;
+        let mut image;
+        if tile.unlocked {
+            text_color = options.unlocked_theme.text_color;
+            image = render_tile_template(
+                options.size,
+                options.border_size,
+                options.inset_size,
+                options.unlocked_theme.background_color,
+                options.unlocked_theme.border_color,
+                options.unlocked_theme.inset_color,
+            );
         } else {
-            self.locked_template.clone()
-        };
-        let theme = if tile.unlocked {
-            &self.options.unlocked_theme
-        } else {
-            &self.options.locked_theme
-        };
-        let (x1, mut y1, x2, mut y2) = self.content_bounds;
-        let text_size = self.options.text_size as f32;
+            text_color = options.locked_theme.text_color;
+            image = render_tile_template(
+                options.size,
+                options.border_size,
+                options.inset_size,
+                options.locked_theme.background_color,
+                options.locked_theme.border_color,
+                options.locked_theme.inset_color,
+            );
+        }
+        let (x1, mut y1, x2, mut y2) = compute_content_bounds(options);
+        let text_size = options.text_size as f32;
         // composite in text
         let number_text = self.text_renderer.render(
             &tile.number.to_string(),
             &TextRenderOptions {
                 size: text_size,
-                color: theme.text_color,
+                color: text_color,
                 pixelation: None,
             },
         );
@@ -119,7 +105,7 @@ impl<'a> TileRenderer<'a> {
             &tile.name,
             &TextRenderOptions {
                 size: text_size,
-                color: theme.text_color,
+                color: text_color,
                 pixelation: None,
             },
         );
@@ -143,8 +129,8 @@ impl<'a> TileRenderer<'a> {
             overlay: Some(OverlayMode::Merge),
         });
         // now shift y1 and y2 so that the tile's image does not overlap the text
-        y1 += number_text.height() + self.options.padding;
-        y2 -= name_text.height() + self.options.padding;
+        y1 += number_text.height() + options.padding;
+        y2 -= name_text.height() + options.padding;
         let content_width = x2 - x1;
         let content_height = y2 - y1;
         let mut item_image = tile.image.clone();

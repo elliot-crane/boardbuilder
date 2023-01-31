@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     // deps
     let image_loader = ImageLoader::new(Default::default())?;
     let text_renderer = TextRenderer::default();
-    let tile_renderer = TileRenderer::new(Default::default(), &text_renderer);
+    let tile_renderer = TileRenderer::new(&text_renderer);
     let board_renderer = BoardRenderer::new(&tile_renderer);
 
     let serp_helm = image_loader
