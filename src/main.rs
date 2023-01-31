@@ -22,7 +22,7 @@ fn main() -> Result<()> {
     let board_renderer = BoardRenderer::new(&tile_renderer);
 
     let serp_helm = image_loader
-        .load_from_url("https://oldschool.runescape.wiki/images/thumb/Serpentine_helm_detail.png/425px-Serpentine_helm_detail.png")?;
+        .load("https://oldschool.runescape.wiki/images/thumb/Serpentine_helm_detail.png/425px-Serpentine_helm_detail.png")?;
     let serp_tile = Tile {
         number: 14,
         name: "Serpentine helm".to_string(),
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     };
 
     let mark_of_grace = image_loader
-        .load_from_url("https://oldschool.runescape.wiki/images/thumb/Mark_of_grace_detail.png/487px-Mark_of_grace_detail.png")?;
+        .load("https://oldschool.runescape.wiki/images/thumb/Mark_of_grace_detail.png/487px-Mark_of_grace_detail.png")?;
     let agility_tile = Tile {
         number: 11,
         name: "1M Agility XP".to_string(),

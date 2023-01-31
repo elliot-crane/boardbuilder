@@ -58,6 +58,18 @@ impl ImageLoader {
         })
     }
 
+    /// Makes a best effort to load from any given source, it will attempt to interpret as
+    /// a URL first, and then fall back to a path otherwise.
+    pub fn load<S: AsRef<str>>(&self, location: S) -> Result<Image<Rgba>, AppError> {
+        if let Ok(url) = Url::parse(location.as_ref()) {
+            if url.scheme() == "http" || url.scheme() == "https" {
+                return self.load_from_url(location);
+            }
+        }
+        let path = Path::new(location.as_ref());
+        return self.load_from_file(path);
+    }
+
     pub fn load_from_url<U: AsRef<str>>(&self, url: U) -> Result<Image<Rgba>, AppError> {
         let (url, partial_cache_path) = parse_web_url_and_cache_path(url)?;
         let mut cache_path = self.options.cache_dir.clone();
@@ -67,7 +79,7 @@ impl ImageLoader {
         // the easy path - file exists on disk, just return it
         if cache_path.is_file() {
             println!("returning image from filesystem cache");
-            return Image::open(cache_path).map_err(AppError::RILError);
+            return self.load_from_file(cache_path);
         }
         // otherwise, we need to load it
         println!("loading image from URL: {}", url);
@@ -88,6 +100,10 @@ impl ImageLoader {
             .map_err(AppError::RILError)?;
         println!("cached imaged to filesystem: {}", cache_path.display());
         Ok(ril_image)
+    }
+
+    pub fn load_from_file<P: AsRef<Path>>(&self, path: P) -> Result<Image<Rgba>, AppError> {
+        Image::open(path).map_err(AppError::RILError)
     }
 }
 
