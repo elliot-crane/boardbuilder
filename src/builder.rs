@@ -33,7 +33,7 @@ pub enum BoardBuilderError {
     },
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct TileBuilder {
     pub number: u8,
     pub name: String,
@@ -49,7 +49,7 @@ pub struct ContentRect {
     pub y2: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct BoardBuilder {
     pub rows: usize,
     pub cols: usize,

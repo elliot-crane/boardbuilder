@@ -16,7 +16,7 @@ pub struct Tile {
     pub unlocked: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct TileRenderOptions {
     pub padding: u32,
     pub border_size: u32,
@@ -49,6 +49,7 @@ impl Default for TileRenderOptions {
     }
 }
 
+#[derive(Debug)]
 pub struct TileTheme {
     pub border_color: Rgba,
     pub inset_color: Rgba,
