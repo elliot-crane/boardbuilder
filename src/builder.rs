@@ -181,9 +181,7 @@ fn validate_tile_count(
 }
 
 fn validate_tile_numbers(tiles: &[TileBuilder]) -> Result<(), BoardBuilderError> {
-    let mut missing = (1..=(1 + tiles.len()))
-        .map(|x| x as u8)
-        .collect::<HashSet<_>>();
+    let mut missing = (1..=tiles.len()).map(|x| x as u8).collect::<HashSet<_>>();
     let mut unexpected = HashSet::new();
     for tile in tiles {
         if !missing.remove(&tile.number) {
