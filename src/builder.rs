@@ -89,7 +89,7 @@ impl BoardBuilder {
         )?;
 
         // build tiles
-        let tiles = build_tiles(&tiles);
+        let tiles = build_tiles(&tiles, image_loader).map_err(BoardBuilderError::Wrapped)?;
 
         // shadowing to make the syntax below a bit neater
         let image = background_image;
@@ -112,8 +112,22 @@ impl BoardBuilder {
     }
 }
 
-fn build_tiles(tiles: &[TileBuilder]) -> Vec<Tile> {
-    todo!()
+fn build_tiles(tiles: &[TileBuilder], image_loader: &ImageLoader) -> Result<Vec<Tile>, AppError> {
+    let mut result = Vec::with_capacity(tiles.len());
+    for builder in tiles.iter() {
+        let number = builder.number;
+        let name = builder.name.clone();
+        let image = image_loader.load(&builder.image)?;
+        let unlocked = builder.unlocked;
+        let tile = Tile {
+            number,
+            name,
+            image,
+            unlocked,
+        };
+        result.push(tile);
+    }
+    Ok(result)
 }
 
 fn validate_content_rect(
