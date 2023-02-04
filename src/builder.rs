@@ -2,11 +2,19 @@
 
 use std::collections::HashSet;
 
-use crate::{board::Board, images::ImageLoader, tile::TileRenderOptions};
+use crate::{
+    board::Board,
+    error::AppError,
+    images::ImageLoader,
+    tile::{Tile, TileRenderOptions},
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum BoardBuilderError {
+    #[error(transparent)]
+    Wrapped(AppError),
+
     #[error("wrong number of tiles: expected {expected:?}, actual {actual:?}")]
     WrongNumberOfTiles { expected: usize, actual: usize },
 
@@ -66,8 +74,80 @@ impl BoardBuilder {
         validate_tile_count(rows as usize, cols as usize, &tiles)?;
         validate_tile_numbers(&tiles)?;
 
-        todo!()
+        let background_image = image_loader
+            .load(&image)
+            .map_err(BoardBuilderError::Wrapped)?;
+        validate_content_rect(
+            background_image.dimensions(),
+            &content_rect,
+            tile_size,
+            rows,
+            cols,
+        )?;
+
+        // build tiles
+        let tiles = build_tiles(&tiles);
+
+        // shadowing to make the syntax below a bit neater
+        let image = background_image;
+        let content_rect = (
+            content_rect.x1,
+            content_rect.y1,
+            content_rect.x2,
+            content_rect.y2,
+        );
+
+        Ok(Board {
+            rows,
+            cols,
+            content_rect,
+            tile_size,
+            tile_render_options,
+            tiles,
+            image,
+        })
     }
+}
+
+fn build_tiles(tiles: &[TileBuilder]) -> Vec<Tile> {
+    todo!()
+}
+
+fn validate_content_rect(
+    dimensions: (u32, u32),
+    content_rect: &ContentRect,
+    tile_size: u32,
+    rows: usize,
+    cols: usize,
+) -> Result<(), BoardBuilderError> {
+    // TODO: better information on what's actually wrong
+    let (width, height) = dimensions;
+    if content_rect.x1 >= content_rect.x2 || content_rect.y1 >= content_rect.y2 {
+        return Err(BoardBuilderError::InvalidDimensions {
+            width,
+            height,
+            content_rect: content_rect.clone(),
+        });
+    }
+    let rect_width = content_rect.x2 - content_rect.x1;
+    let rect_height = content_rect.y2 - content_rect.y1;
+    if rect_width > width || rect_height > height {
+        return Err(BoardBuilderError::InvalidDimensions {
+            width,
+            height,
+            content_rect: content_rect.clone(),
+        });
+    }
+    let tile_width = tile_size * cols as u32;
+    let tile_height = tile_size * rows as u32;
+    if tile_width > rect_width || tile_height > rect_height {
+        return Err(BoardBuilderError::InvalidDimensions {
+            width,
+            height,
+            content_rect: content_rect.clone(),
+        });
+    }
+    Ok(())
 }
 
 fn validate_tile_count(
