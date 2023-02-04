@@ -8,6 +8,7 @@ use crate::{
     images::ImageLoader,
     tile::{Tile, TileRenderOptions},
 };
+use serde::Deserialize;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -32,6 +33,7 @@ pub enum BoardBuilderError {
     },
 }
 
+#[derive(Deserialize)]
 pub struct TileBuilder {
     pub number: u8,
     pub name: String,
@@ -39,7 +41,7 @@ pub struct TileBuilder {
     pub unlocked: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ContentRect {
     pub x1: u32,
     pub y1: u32,
@@ -47,6 +49,7 @@ pub struct ContentRect {
     pub y2: u32,
 }
 
+#[derive(Deserialize)]
 pub struct BoardBuilder {
     pub rows: usize,
     pub cols: usize,

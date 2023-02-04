@@ -10,5 +10,6 @@ anyhow = "1.0.68"
 image = "0.24.5"
 reqwest = { version = "0.11.14", features = ["blocking"] }
 ril = { version = "0.9.0", features = ["all-pure"] }
+serde = { version = "1.0.152", features = ["std", "derive"] }
 thiserror = "1.0.38"
 url = "2.3.1"

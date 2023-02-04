@@ -1,4 +1,5 @@
 use ril::{Border, BorderPosition, Image, OverlayMode, Paste, Rectangle, ResizeAlgorithm, Rgba};
+use serde::Deserialize;
 
 use crate::{
     palette::{
@@ -15,6 +16,7 @@ pub struct Tile {
     pub unlocked: bool,
 }
 
+#[derive(Deserialize)]
 pub struct TileRenderOptions {
     pub padding: u32,
     pub border_size: u32,
@@ -52,6 +54,35 @@ pub struct TileTheme {
     pub inset_color: Rgba,
     pub background_color: Rgba,
     pub text_color: Rgba,
+}
+
+// this is super hacky but it gets the job done
+#[derive(Deserialize)]
+struct TileThemeShim {
+    border_color: String,
+    inset_color: String,
+    background_color: String,
+    text_color: String,
+}
+
+impl<'de> Deserialize<'de> for TileTheme {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error as DError;
+        let shim = TileThemeShim::deserialize(deserializer)?;
+        let border_color = Rgba::from_hex(&shim.border_color).map_err(DError::custom)?;
+        let inset_color = Rgba::from_hex(&shim.inset_color).map_err(DError::custom)?;
+        let background_color = Rgba::from_hex(&shim.background_color).map_err(DError::custom)?;
+        let text_color = Rgba::from_hex(&shim.text_color).map_err(DError::custom)?;
+        Ok(TileTheme {
+            border_color,
+            inset_color,
+            background_color,
+            text_color,
+        })
+    }
 }
 
 pub struct TileRenderer<'a> {
