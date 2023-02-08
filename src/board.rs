@@ -63,6 +63,7 @@ impl<'a> BoardRenderer<'a> {
                 });
                 x += tile_size + x_pad;
             }
+            x = x1;
             y += tile_size + y_pad;
         }
         image
